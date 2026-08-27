@@ -1,0 +1,6 @@
+{
+  "name": "Pop-Stamp Print Master (팝핑 도장 인쇄기)",
+  "description": "팝핑 머신 전용 도장 자동 최적 배치 및 1:1 정밀 인쇄 웹 서비스",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
