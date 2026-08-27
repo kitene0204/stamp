@@ -92,37 +92,37 @@ export const StampList: React.FC<StampListProps> = ({
         </div>
 
         {/* Batch action buttons */}
-        <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+        <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 ml-auto">
           <button
             onClick={() => setShowBatchModal(!showBatchModal)}
-            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap shrink-0"
             title="모든 도장 크기 및 규격 일괄 적용"
           >
             <Sliders className="w-3.5 h-3.5 text-slate-500" />
-            <span>일괄 변경</span>
+            <span className="whitespace-nowrap">일괄 변경</span>
           </button>
 
           <button
             onClick={() => increaseAllCopies(1)}
-            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap shrink-0"
             title="모든 도장 수량 1개씩 추가"
           >
             <PlusCircle className="w-3.5 h-3.5 text-slate-500" />
-            <span>수량 +1</span>
+            <span className="whitespace-nowrap">수량 +1</span>
           </button>
 
           <button
             onClick={() => toggleAllCutGuides(true)}
-            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap shrink-0"
             title="모든 도장에 재단 가이드선 표시"
           >
             <Scissors className="w-3.5 h-3.5 text-slate-500" />
-            <span>재단선 전체ON</span>
+            <span className="whitespace-nowrap">재단선 전체ON</span>
           </button>
 
           <button
             onClick={onClearAll}
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg text-xs transition-colors"
+            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg text-xs transition-colors shrink-0"
             title="목록 전체 비우기"
           >
             <Trash2 className="w-4 h-4" />

@@ -34,22 +34,22 @@ import { PrintGuideModal } from './components/PrintGuideModal';
 import { PageSettingsModal } from './components/PageSettingsModal';
 import { PrintAreaDOM } from './components/PrintAreaDOM';
 
-// Initial Starter Stamps for instant gratification
+// Initial Starter Stamps for instant gratification (includes 19mm popping standard)
 const INITIAL_STARTER_STAMPS: StampItem[] = [
   {
-    id: 'starter-praise-1',
-    name: '참 잘했어요 (20mm 원형)',
+    id: 'starter-popping-19',
+    name: '19mm 팝핑 표준 도장 (참 잘했어요)',
     imageUrl: createSvgStampDataUrl(
       '참 잘했어요',
-      'GREAT JOB',
+      'POP-STAMP 19MM',
       '★ ★ ★',
       'praise'
     ),
     originalWidth: 300,
     originalHeight: 300,
     aspectRatio: 1,
-    widthMm: 20,
-    heightMm: 20,
+    widthMm: 19,
+    heightMm: 19,
     lockAspectRatio: true,
     shape: 'circle',
     copies: 2,
@@ -59,7 +59,7 @@ const INITIAL_STARTER_STAMPS: StampItem[] = [
     cutGuideMarginMm: 1.0,
     filters: { ...DEFAULT_FILTER_SETTINGS },
     sourceType: 'preset',
-    createdAt: Date.now() - 3000,
+    createdAt: Date.now() - 4000,
   },
   {
     id: 'starter-check-2',
@@ -77,7 +77,7 @@ const INITIAL_STARTER_STAMPS: StampItem[] = [
     heightMm: 15,
     lockAspectRatio: true,
     shape: 'circle',
-    copies: 3,
+    copies: 2,
     showCutGuide: true,
     cutGuideColor: '#94a3b8',
     cutGuideStyle: 'solid',
@@ -88,7 +88,7 @@ const INITIAL_STARTER_STAMPS: StampItem[] = [
   },
   {
     id: 'starter-star-3',
-    name: '최고예요! (22mm 별도장)',
+    name: '최고예요! (19mm 정사각 패드)',
     imageUrl: createSvgStampDataUrl(
       '최고예요',
       'EXCELLENT',
@@ -98,10 +98,10 @@ const INITIAL_STARTER_STAMPS: StampItem[] = [
     originalWidth: 300,
     originalHeight: 300,
     aspectRatio: 1,
-    widthMm: 22,
-    heightMm: 22,
+    widthMm: 19,
+    heightMm: 19,
     lockAspectRatio: true,
-    shape: 'circle',
+    shape: 'rectangle',
     copies: 2,
     showCutGuide: true,
     cutGuideColor: '#94a3b8',

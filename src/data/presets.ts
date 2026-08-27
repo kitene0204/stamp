@@ -39,6 +39,15 @@ export const STANDARD_PAD_PRESETS: StandardPadPreset[] = [
     description: '캐릭터 및 짧은 칭찬 문구 도장',
   },
   {
+    id: 'circle-19',
+    name: '19mm 원형 (팝핑 표준 ★)',
+    shape: 'circle',
+    widthMm: 19,
+    heightMm: 19,
+    category: '원형 (Circular)',
+    description: '교사 연수 & 팝핑 머신 최고 인기 19mm 규격',
+  },
+  {
     id: 'circle-20',
     name: '20mm 원형',
     shape: 'circle',
@@ -109,6 +118,15 @@ export const STANDARD_PAD_PRESETS: StandardPadPreset[] = [
     heightMm: 15,
     category: '사각 (Rectangular)',
     description: '기본 한자/한글 인감형 사각 도장',
+  },
+  {
+    id: 'rect-19-19',
+    name: '19 x 19mm 정사각',
+    shape: 'rectangle',
+    widthMm: 19,
+    heightMm: 19,
+    category: '사각 (Rectangular)',
+    description: '19mm 정사각 팝핑 패드 규격',
   },
   {
     id: 'rect-20-20',

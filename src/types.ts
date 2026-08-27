@@ -48,7 +48,11 @@ export interface PageMargin {
 
 export interface LayoutSettings {
   pageMarginMm: PageMargin; // default 10mm all around
-  itemSpacingMm: number; // gap between stamps (e.g. 2mm ~ 10mm)
+  itemSpacingMm: number; // gap between stamps (e.g. 2mm ~ 30mm)
+  spacingMode: 'pad-size' | 'custom'; // 'pad-size': separate by stamp pad width/size (user request), 'custom': fixed mm
+  padSpacingRatio: number; // multiplier for pad-size mode (e.g. 1.0 = 100% of pad width)
+  horizontalSpacingMm: number; // custom horizontal gap in mm
+  verticalSpacingMm: number; // custom vertical gap in mm
   alignment: 'pack' | 'grid' | 'centered';
   showRuler: boolean;
   showCalibrationCheckBar: boolean; // 50mm verification ruler on printed paper

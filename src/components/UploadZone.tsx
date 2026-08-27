@@ -14,6 +14,23 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Clipboard paste support (Ctrl+V) for easy teacher uploads
+  React.useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+        const imageFiles = Array.from(e.clipboardData.files).filter((f) =>
+          f.type.startsWith('image/')
+        );
+        if (imageFiles.length > 0) {
+          processFiles(imageFiles);
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
   const processFiles = async (files: FileList | File[]) => {
     setIsLoading(true);
     const newStamps: StampItem[] = [];
@@ -33,9 +50,9 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
         const meta = await readImageDimensions(dataUrl);
         const fileName = file.name.replace(/\.[^/.]+$/, '');
 
-        // Determine default size (e.g. 20mm default, maintaining aspect ratio)
-        let initialWidth = 20;
-        let initialHeight = 20;
+        // Determine default size (19mm standard for popping workshops)
+        let initialWidth = 19;
+        let initialHeight = 19;
         let shape: 'circle' | 'rectangle' = 'circle';
 
         if (Math.abs(meta.aspectRatio - 1) > 0.2) {
@@ -52,7 +69,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
 
         const stamp: StampItem = {
           id: `stamp-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
-          name: fileName || `도장 디자인 ${i + 1}`,
+          name: fileName || `교사 도장 디자인 ${i + 1}`,
           imageUrl: dataUrl,
           originalWidth: meta.width,
           originalHeight: meta.height,
@@ -234,28 +251,30 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
           )}
         </div>
 
-        <h3 className="text-base font-semibold text-slate-900 mb-1">
-          도장 이미지 업로드 (다중 선택 가능)
+        <h3 className="text-base font-bold text-slate-900 mb-1">
+          교사 연수 도장 도안 직접 업로드 (다중 선택 가능)
         </h3>
-        <p className="text-xs text-slate-500 mb-3">
-          이미지 파일(PNG, JPG, WEBP)을 마우스로 끌어다 놓거나 클릭하여 선택하세요.
+        <p className="text-xs text-slate-600 mb-3">
+          사진이나 이미지 파일(PNG, JPG, SVG)을 끌어다 놓거나, 화면에서 <strong className="text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Ctrl + V (붙여넣기)</strong>를 누르세요!
         </p>
 
-        <button
-          type="button"
-          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-xs"
-        >
-          <ImageIcon className="w-4 h-4" />
-          <span>내 PC에서 이미지 파일 선택</span>
-        </button>
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            type="button"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-xs cursor-pointer"
+          >
+            <ImageIcon className="w-4 h-4" />
+            <span>내 PC/스마트폰에서 사진 선택</span>
+          </button>
+        </div>
       </div>
 
       {/* Format Notice */}
       <div className="mt-3 flex items-start space-x-2 text-xs text-slate-600 bg-amber-50/80 border border-amber-200 rounded-lg p-2.5">
         <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
         <div>
-          <strong className="text-amber-900 font-semibold">선생님을 위한 팁: </strong>
-          도장 테두리 외곽이 깔끔하게 인쇄되도록 <span className="font-semibold text-amber-900">배경이 투명한 PNG 파일</span>을 권장합니다. (흰색 배경 이미지도 내장 흑백 변환 필터로 즉시 최적화 가능)
+          <strong className="text-amber-900 font-semibold">연수 교사 유의사항: </strong>
+          직접 그린 손그림이나 사진도 업로드 후 <strong className="text-indigo-700 font-semibold">⚡흑백 보정(✨)</strong> 버튼을 누르면 팝핑 머신 전용 K100 흑백 도안으로 즉시 변환됩니다. (기본 19mm 규격 적용)
         </div>
       </div>
 

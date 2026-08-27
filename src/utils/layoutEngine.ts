@@ -6,12 +6,16 @@ export const MM_TO_PX = 96 / 25.4; // 3.779527559px per mm at 96 DPI
 
 export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
   pageMarginMm: {
-    top: 10,
-    bottom: 10,
-    left: 10,
-    right: 10,
+    top: 15,
+    bottom: 15,
+    left: 15,
+    right: 15,
   },
-  itemSpacingMm: 3,
+  itemSpacingMm: 30, // 3cm (30mm) 좌우/상하 여유 간격
+  spacingMode: 'custom', // 30mm (3cm) 고정 간격 모드
+  padSpacingRatio: 1.5,
+  horizontalSpacingMm: 30, // 3cm (30mm)
+  verticalSpacingMm: 30, // 3cm (30mm)
   alignment: 'pack',
   showRuler: true,
   showCalibrationCheckBar: true,
@@ -33,7 +37,6 @@ export function calculateA4Layout(
 
   const printableWidth = Math.max(10, pageWidth - marginLeft - marginRight);
   const printableHeight = Math.max(10, pageHeight - marginTop - marginBottom);
-  const spacing = Math.max(0.5, settings.itemSpacingMm);
 
   // Flatten all copies of each stamp item
   const instancesToPlace: { stamp: StampItem; copyIndex: number }[] = [];
@@ -70,6 +73,7 @@ export function calculateA4Layout(
   let cursorX = marginLeft;
   let cursorY = marginTop;
   let currentRowHeight = 0;
+  let currentRowMaxVGap = 0;
   let currentOccupiedArea = 0;
 
   for (let i = 0; i < instancesToPlace.length; i++) {
@@ -80,20 +84,31 @@ export function calculateA4Layout(
     const itemTotalWidth = stamp.widthMm + extraMargin;
     const itemTotalHeight = stamp.heightMm + extraMargin;
 
+    // Calculate dynamic spacing: either pad-size (stamp width/height) or fixed custom mm (default 30mm / 3cm)
+    const hGap =
+      settings.spacingMode === 'pad-size'
+        ? Math.max(20, stamp.widthMm * (settings.padSpacingRatio ?? 1.5))
+        : Math.max(1, settings.horizontalSpacingMm ?? settings.itemSpacingMm ?? 30);
+
+    const vGap =
+      settings.spacingMode === 'pad-size'
+        ? Math.max(20, stamp.heightMm * (settings.padSpacingRatio ?? 1.5))
+        : Math.max(1, settings.verticalSpacingMm ?? settings.itemSpacingMm ?? 30);
+
     // Check if item exceeds printable page bounds entirely
     const canFitWidth = itemTotalWidth <= printableWidth;
     const canFitHeight = itemTotalHeight <= printableHeight;
 
     if (!canFitWidth || !canFitHeight) {
-      // Force clamp to printable area for layout
       console.warn(`Stamp ${stamp.name} (${itemTotalWidth}x${itemTotalHeight}mm) exceeds printable area`);
     }
 
     // Check if we need to wrap to the next row
     if (cursorX + itemTotalWidth > marginLeft + printableWidth && cursorX > marginLeft) {
       cursorX = marginLeft;
-      cursorY += currentRowHeight + spacing;
+      cursorY += currentRowHeight + currentRowMaxVGap;
       currentRowHeight = 0;
+      currentRowMaxVGap = 0;
     }
 
     // Check if we need to wrap to the next page
@@ -114,6 +129,7 @@ export function calculateA4Layout(
       cursorX = marginLeft;
       cursorY = marginTop;
       currentRowHeight = 0;
+      currentRowMaxVGap = 0;
       currentOccupiedArea = 0;
     }
 
@@ -134,9 +150,12 @@ export function calculateA4Layout(
     currentOccupiedArea += stamp.widthMm * stamp.heightMm;
 
     // Update cursor & row height
-    cursorX += itemTotalWidth + spacing;
+    cursorX += itemTotalWidth + hGap;
     if (itemTotalHeight > currentRowHeight) {
       currentRowHeight = itemTotalHeight;
+    }
+    if (vGap > currentRowMaxVGap) {
+      currentRowMaxVGap = vGap;
     }
   }
 

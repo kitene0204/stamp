@@ -68,31 +68,143 @@ export const PageSettingsModal: React.FC<PageSettingsModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 space-y-4 text-xs">
-          {/* Spacing between stamps */}
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          {/* Spacing Mode Control (User Request: separate by pad size) */}
+          <div className="p-3.5 bg-rose-50/70 rounded-xl border border-rose-200 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-800">도장 간 최소 간격 (Spacing)</span>
-              <span className="font-mono font-bold text-rose-600 text-sm">
-                {settings.itemSpacingMm} mm
+              <span className="font-bold text-rose-950 text-sm">인쇄 시 도장 간격 (좌우/상하)</span>
+              <span className="text-[10px] font-bold bg-rose-200 text-rose-800 px-2 py-0.5 rounded-full">
+                {settings.spacingMode === 'pad-size' ? '패드 크기만큼 띄움' : `${settings.itemSpacingMm}mm 고정`}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500">
-              도장 칼선 및 가위질 여유 공간을 확보합니다 (기본 3mm 권장).
-            </p>
-            <input
-              type="range"
-              min="1"
-              max="15"
-              step="0.5"
-              value={settings.itemSpacingMm}
-              onChange={(e) =>
-                onUpdateSettings({
-                  ...settings,
-                  itemSpacingMm: parseFloat(e.target.value) || 3,
-                })
-              }
-              className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600"
-            />
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  onUpdateSettings({
+                    ...settings,
+                    spacingMode: 'pad-size',
+                    padSpacingRatio: 1.0,
+                  })
+                }
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  settings.spacingMode === 'pad-size'
+                    ? 'bg-white border-rose-500 ring-2 ring-rose-200 text-rose-900 shadow-xs'
+                    : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                }`}
+              >
+                <div className="font-bold text-xs flex items-center justify-between">
+                  <span>패드 크기만큼 띄우기</span>
+                  {settings.spacingMode === 'pad-size' && <Check className="w-3.5 h-3.5 text-rose-600" />}
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  도장 본체 크기만큼 좌우/상하 여유 공간 확보 (가위질 및 패드 장착 최적화)
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  onUpdateSettings({
+                    ...settings,
+                    spacingMode: 'custom',
+                  })
+                }
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  settings.spacingMode === 'custom'
+                    ? 'bg-white border-rose-500 ring-2 ring-rose-200 text-rose-900 shadow-xs'
+                    : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                }`}
+              >
+                <div className="font-bold text-xs flex items-center justify-between">
+                  <span>직접 mm 간격 지정</span>
+                  {settings.spacingMode === 'custom' && <Check className="w-3.5 h-3.5 text-rose-600" />}
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  원하는 간격(예: 5mm, 15mm, 20mm)을 수치로 직접 제어
+                </p>
+              </button>
+            </div>
+
+            {/* Custom Spacing Slider if custom mode */}
+            {settings.spacingMode === 'custom' && (
+              <div className="space-y-2.5 pt-2 border-t border-rose-200/60">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-700">도장 사이 간격 (mm/cm):</span>
+                  <div className="flex items-center space-x-1.5">
+                    <input
+                      type="number"
+                      min="1"
+                      max="60"
+                      value={settings.itemSpacingMm}
+                      onChange={(e) => {
+                        const val = Math.max(1, parseFloat(e.target.value) || 1);
+                        onUpdateSettings({
+                          ...settings,
+                          itemSpacingMm: val,
+                          horizontalSpacingMm: val,
+                          verticalSpacingMm: val,
+                        });
+                      }}
+                      className="w-16 text-center font-bold text-sm bg-white border border-rose-400 text-rose-700 rounded px-1.5 py-0.5"
+                    />
+                    <span className="font-mono text-slate-600 font-semibold">
+                      mm ({((settings.itemSpacingMm || 30) / 10).toFixed(1)}cm)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick 3cm, 2cm, 1.5cm buttons */}
+                <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                  <span className="text-[10px] text-slate-500 font-medium">빠른 간격:</span>
+                  {[
+                    { label: '3cm (30mm) ★', val: 30 },
+                    { label: '2cm (20mm)', val: 20 },
+                    { label: '1.5cm (15mm)', val: 15 },
+                    { label: '4cm (40mm)', val: 40 },
+                    { label: '5cm (50mm)', val: 50 },
+                  ].map((p) => (
+                    <button
+                      key={p.val}
+                      type="button"
+                      onClick={() =>
+                        onUpdateSettings({
+                          ...settings,
+                          itemSpacingMm: p.val,
+                          horizontalSpacingMm: p.val,
+                          verticalSpacingMm: p.val,
+                        })
+                      }
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                        settings.itemSpacingMm === p.val
+                          ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-rose-50 hover:border-rose-300'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="range"
+                  min="1"
+                  max="60"
+                  step="1"
+                  value={settings.itemSpacingMm}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 30;
+                    onUpdateSettings({
+                      ...settings,
+                      itemSpacingMm: val,
+                      horizontalSpacingMm: val,
+                      verticalSpacingMm: val,
+                    });
+                  }}
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600"
+                />
+              </div>
+            )}
           </div>
 
           {/* Margins */}

@@ -231,51 +231,82 @@ export const StampCard: React.FC<StampCardProps> = ({
           </div>
         </div>
 
-        {/* Size Sliders and Inputs */}
-        <div className="space-y-2 pt-1 border-t border-slate-100">
+        {/* Size Direct Inputs and Sliders */}
+        <div className="space-y-2.5 pt-2 border-t border-slate-100">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-700">도장 실측 크기 (mm)</span>
+            <span className="text-xs font-bold text-slate-800 flex items-center space-x-1">
+              <span>도장 실측 치수 직접 기입</span>
+            </span>
             <button
               type="button"
               onClick={() => onUpdate({ ...stamp, lockAspectRatio: !stamp.lockAspectRatio })}
-              className={`inline-flex items-center space-x-1 text-[11px] px-1.5 py-0.5 rounded border ${
+              className={`inline-flex items-center space-x-1 text-[11px] px-2 py-0.5 rounded border transition-colors ${
                 stamp.lockAspectRatio
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold'
                   : 'bg-slate-100 border-slate-200 text-slate-500'
               }`}
               title={stamp.lockAspectRatio ? '비율 고정됨' : '비율 고정 해제됨'}
             >
               {stamp.lockAspectRatio ? (
                 <>
-                  <Lock className="w-3 h-3" />
-                  <span>비율 유지</span>
+                  <Lock className="w-3 h-3 text-indigo-600" />
+                  <span>정비율 고정</span>
                 </>
               ) : (
                 <>
-                  <Unlock className="w-3 h-3" />
+                  <Unlock className="w-3 h-3 text-slate-400" />
                   <span>자유 비율</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Width Size Control */}
-          <div>
+          {/* Quick Click Sizes including 19mm (User request) */}
+          <div className="flex items-center flex-wrap gap-1">
+            <span className="text-[10px] text-slate-400 font-medium">빠른 규격:</span>
+            {[10, 13, 15, 18, 19, 20, 25, 30].map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => {
+                  handleWidthChange(size);
+                  if (stamp.lockAspectRatio || stamp.shape === 'circle') {
+                    handleHeightChange(size);
+                  }
+                }}
+                className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-all ${
+                  stamp.widthMm === size
+                    ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
+                    : size === 19
+                    ? 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100 ring-1 ring-rose-200'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+                title={`${size}mm 규격으로 변경`}
+              >
+                {size}mm{size === 19 ? '★' : ''}
+              </button>
+            ))}
+          </div>
+
+          {/* Width / Diameter Input (Direct editable) */}
+          <div className="bg-slate-50/80 p-2 rounded-lg border border-slate-200">
             <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-slate-500">
-                {stamp.shape === 'circle' ? '지름 (가로)' : '가로 (Width)'}:
+              <span className="font-semibold text-slate-700">
+                {stamp.shape === 'circle' ? '도장 지름 (가로)' : '도장 가로 (Width)'}:
               </span>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-1.5">
+                <span className="text-[11px] text-slate-400">직접 입력:</span>
                 <input
                   type="number"
                   min="1.5"
                   max="50"
-                  step="0.5"
+                  step="0.1"
                   value={stamp.widthMm}
                   onChange={(e) => handleWidthChange(parseFloat(e.target.value) || 1.5)}
-                  className="w-16 text-right text-xs font-mono font-semibold bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 focus:bg-white focus:border-rose-500 outline-hidden"
+                  className="w-16 text-center text-sm font-mono font-bold bg-white border border-rose-300 text-rose-700 rounded px-1.5 py-0.5 focus:ring-2 focus:ring-rose-400 outline-hidden shadow-2xs"
+                  title="원하는 mm 수치를 직접 타이핑하세요 (예: 19, 18.5, 20 등)"
                 />
-                <span className="text-slate-500 text-xs font-mono">mm</span>
+                <span className="text-slate-700 text-xs font-mono font-bold">mm</span>
               </div>
             </div>
             <input
@@ -291,22 +322,24 @@ export const StampCard: React.FC<StampCardProps> = ({
 
           {/* Height Size Control (if not circle or if free ratio) */}
           {(!stamp.lockAspectRatio || stamp.shape !== 'circle') && (
-            <div>
+            <div className="bg-slate-50/80 p-2 rounded-lg border border-slate-200">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-slate-500">
-                  {stamp.shape === 'circle' ? '지름 (세로)' : '세로 (Height)'}:
+                <span className="font-semibold text-slate-700">
+                  {stamp.shape === 'circle' ? '도장 지름 (세로)' : '도장 세로 (Height)'}:
                 </span>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[11px] text-slate-400">직접 입력:</span>
                   <input
                     type="number"
                     min="1.5"
                     max="50"
-                    step="0.5"
+                    step="0.1"
                     value={stamp.heightMm}
                     onChange={(e) => handleHeightChange(parseFloat(e.target.value) || 1.5)}
-                    className="w-16 text-right text-xs font-mono font-semibold bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 focus:bg-white focus:border-rose-500 outline-hidden"
+                    className="w-16 text-center text-sm font-mono font-bold bg-white border border-rose-300 text-rose-700 rounded px-1.5 py-0.5 focus:ring-2 focus:ring-rose-400 outline-hidden shadow-2xs"
+                    title="원하는 mm 수치를 직접 타이핑하세요"
                   />
-                  <span className="text-slate-500 text-xs font-mono">mm</span>
+                  <span className="text-slate-700 text-xs font-mono font-bold">mm</span>
                 </div>
               </div>
               <input

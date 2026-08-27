@@ -478,21 +478,51 @@ export const TextStampModal: React.FC<TextStampModalProps> = ({
             {/* Size & Copies */}
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  도장 직경 크기: <strong className="text-rose-600">{sizeMm}mm</strong>
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="range"
-                    min="10"
-                    max="50"
-                    step="1"
-                    value={sizeMm}
-                    onChange={(e) => setSizeMm(parseInt(e.target.value) || 20)}
-                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600"
-                  />
-                  <span className="text-slate-600 font-mono font-bold">{sizeMm}mm</span>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-slate-700">도장 크기 (직접 기입):</label>
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="number"
+                      min="5"
+                      max="50"
+                      step="0.5"
+                      value={sizeMm}
+                      onChange={(e) => setSizeMm(parseFloat(e.target.value) || 19)}
+                      className="w-14 text-center text-xs font-mono font-bold bg-white border border-rose-300 text-rose-700 rounded px-1 py-0.5"
+                    />
+                    <span className="text-slate-500 font-mono">mm</span>
+                  </div>
                 </div>
+
+                {/* Quick 19mm / standard buttons */}
+                <div className="flex items-center space-x-1 mb-1.5">
+                  {[15, 18, 19, 20, 25, 30].map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setSizeMm(sz)}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                        sizeMm === sz
+                          ? 'bg-rose-600 border-rose-600 text-white'
+                          : sz === 19
+                          ? 'bg-rose-50 border-rose-300 text-rose-700'
+                          : 'bg-white border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {sz}mm{sz === 19 ? '★' : ''}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="range"
+                  min="5"
+                  max="50"
+                  step="0.5"
+                  value={sizeMm}
+                  onChange={(e) => setSizeMm(parseFloat(e.target.value) || 19)}
+                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600"
+                />
               </div>
 
               <div>
