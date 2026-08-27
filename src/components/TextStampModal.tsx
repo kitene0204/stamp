@@ -484,7 +484,7 @@ export const TextStampModal: React.FC<TextStampModalProps> = ({
                     <input
                       type="number"
                       min="5"
-                      max="50"
+                      max="80"
                       step="0.5"
                       value={sizeMm}
                       onChange={(e) => setSizeMm(parseFloat(e.target.value) || 19)}
@@ -495,8 +495,8 @@ export const TextStampModal: React.FC<TextStampModalProps> = ({
                 </div>
 
                 {/* Quick 19mm / standard buttons */}
-                <div className="flex items-center space-x-1 mb-1.5">
-                  {[15, 18, 19, 20, 25, 30].map((sz) => (
+                <div className="flex items-center space-x-1 mb-1.5 flex-wrap gap-y-1">
+                  {[15, 18, 19, 20, 25, 30, 50, 80].map((sz) => (
                     <button
                       key={sz}
                       type="button"
@@ -517,7 +517,7 @@ export const TextStampModal: React.FC<TextStampModalProps> = ({
                 <input
                   type="range"
                   min="5"
-                  max="50"
+                  max="80"
                   step="0.5"
                   value={sizeMm}
                   onChange={(e) => setSizeMm(parseFloat(e.target.value) || 19)}

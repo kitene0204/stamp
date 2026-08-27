@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 truncate max-w-xs sm:max-w-md hidden md:block">
-                도장 이미지 자동 최적 배치 및 1.5mm ~ 50mm 실측 출력 도구
+                도장 이미지 자동 최적 배치 및 1.5mm ~ 80mm 실측 출력 도구
               </p>
             </div>
           </div>

@@ -31,73 +31,86 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
     return () => window.removeEventListener('paste', handlePaste);
   }, []);
 
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+
   const processFiles = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    if (fileArray.length === 0) return;
+
     setIsLoading(true);
-    const newStamps: StampItem[] = [];
+    setUploadProgress({ current: 0, total: fileArray.length });
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
+    try {
+      const now = Date.now();
+      const promises = fileArray.map(async (file, i) => {
+        try {
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
 
-      try {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
+          const meta = await readImageDimensions(dataUrl);
+          const fileName = file.name.replace(/\.[^/.]+$/, '');
 
-        const meta = await readImageDimensions(dataUrl);
-        const fileName = file.name.replace(/\.[^/.]+$/, '');
+          // Determine default size (19mm standard for popping workshops)
+          let initialWidth = 19;
+          let initialHeight = 19;
+          let shape: 'circle' | 'rectangle' = 'circle';
 
-        // Determine default size (19mm standard for popping workshops)
-        let initialWidth = 19;
-        let initialHeight = 19;
-        let shape: 'circle' | 'rectangle' = 'circle';
-
-        if (Math.abs(meta.aspectRatio - 1) > 0.2) {
-          // Rectangular image
-          shape = 'rectangle';
-          if (meta.aspectRatio > 1) {
-            initialWidth = 30;
-            initialHeight = Math.round((30 / meta.aspectRatio) * 10) / 10;
-          } else {
-            initialHeight = 30;
-            initialWidth = Math.round((30 * meta.aspectRatio) * 10) / 10;
+          if (Math.abs(meta.aspectRatio - 1) > 0.2) {
+            // Rectangular image
+            shape = 'rectangle';
+            if (meta.aspectRatio > 1) {
+              initialWidth = 30;
+              initialHeight = Math.round((30 / meta.aspectRatio) * 10) / 10;
+            } else {
+              initialHeight = 30;
+              initialWidth = Math.round((30 * meta.aspectRatio) * 10) / 10;
+            }
           }
+
+          setUploadProgress((prev) => prev ? { ...prev, current: prev.current + 1 } : null);
+
+          const stamp: StampItem = {
+            id: `stamp-${now}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+            name: fileName || `교사 도장 디자인 ${i + 1}`,
+            imageUrl: dataUrl,
+            originalWidth: meta.width,
+            originalHeight: meta.height,
+            aspectRatio: meta.aspectRatio,
+            widthMm: Math.min(80, Math.max(1.5, initialWidth)),
+            heightMm: Math.min(80, Math.max(1.5, initialHeight)),
+            lockAspectRatio: true,
+            shape: shape,
+            copies: 1,
+            showCutGuide: true,
+            cutGuideColor: '#94a3b8',
+            cutGuideStyle: 'solid',
+            cutGuideMarginMm: 1.0,
+            filters: { ...DEFAULT_FILTER_SETTINGS },
+            sourceType: 'upload',
+            createdAt: now + i,
+          };
+
+          return stamp;
+        } catch (err) {
+          console.error('File read error:', err);
+          return null;
         }
+      });
 
-        const stamp: StampItem = {
-          id: `stamp-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
-          name: fileName || `교사 도장 디자인 ${i + 1}`,
-          imageUrl: dataUrl,
-          originalWidth: meta.width,
-          originalHeight: meta.height,
-          aspectRatio: meta.aspectRatio,
-          widthMm: Math.min(50, Math.max(1.5, initialWidth)),
-          heightMm: Math.min(50, Math.max(1.5, initialHeight)),
-          lockAspectRatio: true,
-          shape: shape,
-          copies: 1,
-          showCutGuide: true,
-          cutGuideColor: '#94a3b8',
-          cutGuideStyle: 'solid',
-          cutGuideMarginMm: 1.0,
-          filters: { ...DEFAULT_FILTER_SETTINGS },
-          sourceType: 'upload',
-          createdAt: Date.now(),
-        };
+      const results = await Promise.all(promises);
+      const newStamps = results.filter((s): s is StampItem => s !== null);
 
-        newStamps.push(stamp);
-      } catch (err) {
-        console.error('File read error:', err);
+      if (newStamps.length > 0) {
+        onAddStamps(newStamps);
       }
+    } finally {
+      setIsLoading(false);
+      setUploadProgress(null);
     }
-
-    if (newStamps.length > 0) {
-      onAddStamps(newStamps);
-    }
-    setIsLoading(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -208,11 +221,22 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
         <button
           onClick={() => fileInputRef.current?.click()}
           id="btn-upload-more"
-          className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer"
+          disabled={isLoading}
+          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+          title="여러 이미지 파일을 한 번에 선택(Ctrl/Shift)하여 추가"
         >
-          <Plus className="w-4 h-4" />
-          <span>도장 이미지 추가</span>
+          {isLoading ? (
+            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Plus className="w-3.5 h-3.5" />
+          )}
+          <span>+ 여러 도장 추가</span>
         </button>
+        {uploadProgress && (
+          <span className="text-[11px] text-rose-600 font-semibold animate-pulse">
+            {uploadProgress.current}/{uploadProgress.total}개 등록 중...
+          </span>
+        )}
       </div>
     );
   }
@@ -239,32 +263,47 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
         id="dropzone-area"
         className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all ${
           isDragging
-            ? 'border-rose-500 bg-rose-50/60 ring-4 ring-rose-100'
+            ? 'border-rose-500 bg-rose-50/70 ring-4 ring-rose-100 scale-[1.01]'
             : 'border-slate-300 hover:border-rose-400 hover:bg-slate-50/80 bg-slate-50/40'
         }`}
       >
-        <div className="w-12 h-12 mx-auto rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mb-3 shadow-xs">
           {isLoading ? (
-            <div className="w-6 h-6 border-2 border-rose-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-7 h-7 border-3 border-rose-600 border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Upload className="w-6 h-6" />
+            <Upload className="w-7 h-7" />
           )}
         </div>
 
         <h3 className="text-base font-bold text-slate-900 mb-1">
-          교사 연수 도장 도안 직접 업로드 (다중 선택 가능)
+          도장 도안 여러 개 한 번에 업로드 (다중 선택 지원)
         </h3>
-        <p className="text-xs text-slate-600 mb-3">
-          사진이나 이미지 파일(PNG, JPG, SVG)을 끌어다 놓거나, 화면에서 <strong className="text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Ctrl + V (붙여넣기)</strong>를 누르세요!
+        <p className="text-xs text-slate-600 mb-3 max-w-md mx-auto">
+          여러 개의 이미지 파일(PNG, JPG, SVG, WebP)을 <strong className="text-rose-700 font-semibold">동시에 마우스로 끌어다 놓거나</strong>, 파일 선택창에서 <strong className="text-rose-700 font-semibold">Ctrl 또는 Shift 키를 누르고 한 번에 여러 장을 선택</strong>하세요!
         </p>
+
+        {uploadProgress && (
+          <div className="max-w-xs mx-auto mb-3 bg-white border border-rose-200 rounded-lg p-2.5 shadow-xs">
+            <div className="flex justify-between text-xs font-semibold text-rose-700 mb-1">
+              <span>이미지 변환 및 등록 중</span>
+              <span>{uploadProgress.current} / {uploadProgress.total}</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-rose-600 h-2 rounded-full transition-all duration-200"
+                style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-center space-x-2">
           <button
             type="button"
-            className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-xs cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-sm cursor-pointer transition-all"
           >
             <ImageIcon className="w-4 h-4" />
-            <span>내 PC/스마트폰에서 사진 선택</span>
+            <span>여러 이미지 한 번에 선택하기</span>
           </button>
         </div>
       </div>

@@ -153,7 +153,7 @@ export const StampList: React.FC<StampListProps> = ({
                 <input
                   type="number"
                   min="1.5"
-                  max="50"
+                  max="80"
                   step="0.5"
                   value={batchSize}
                   onChange={(e) => setBatchSize(parseFloat(e.target.value) || 20)}
@@ -181,7 +181,7 @@ export const StampList: React.FC<StampListProps> = ({
               <input
                 type="number"
                 min="1"
-                max="50"
+                max="500"
                 value={batchCopies}
                 onChange={(e) => setBatchCopies(parseInt(e.target.value) || 1)}
                 className="w-full bg-white border border-indigo-200 rounded-lg px-2 py-1 font-semibold"
@@ -192,7 +192,7 @@ export const StampList: React.FC<StampListProps> = ({
           {/* Quick presets buttons for batch */}
           <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 pt-1">
             <span className="text-[11px] text-indigo-800 font-medium">자주 쓰는 규격:</span>
-            {[15, 20, 25, 30, 38].map((size) => (
+            {[15, 19, 20, 25, 30, 50, 60, 80].map((size) => (
               <button
                 key={size}
                 type="button"
@@ -202,7 +202,7 @@ export const StampList: React.FC<StampListProps> = ({
                 }}
                 className="text-[11px] px-2 py-0.5 bg-white border border-indigo-200 rounded hover:bg-indigo-100 text-indigo-900 font-semibold"
               >
-                {size}mm 원형
+                {size}mm 원형{size === 19 ? '★' : size === 80 ? ' (최대)' : ''}
               </button>
             ))}
           </div>
@@ -231,6 +231,11 @@ export const StampList: React.FC<StampListProps> = ({
             onOpenFilterModal={onOpenFilterModal}
           />
         ))}
+      </div>
+
+      {/* Bottom Quick Multi-Upload Area */}
+      <div className="pt-2">
+        <UploadZone onAddStamps={onAddStamps} />
       </div>
     </div>
   );

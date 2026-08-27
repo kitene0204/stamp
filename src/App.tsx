@@ -352,8 +352,14 @@ export default function App() {
         }
       }
       addToast({
-        title: '도장 수합 전송 완료! 🚀',
+        title: `${newStamps.length}개 도안 수합 전송 완료! 🚀`,
         desc: '진행자 선생님의 A4 인쇄 화면에 3cm 간격으로 수합되었습니다.',
+        type: 'success',
+      });
+    } else {
+      addToast({
+        title: `${newStamps.length}개 도장 도안 추가 완료! 🎉`,
+        desc: `A4 용지에 ${layoutSettings.itemSpacingMm}mm(3cm) 간격으로 자동 최적 배치되었습니다.`,
         type: 'success',
       });
     }

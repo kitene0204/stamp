@@ -35,13 +35,13 @@ export const StampCard: React.FC<StampCardProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleWidthChange = (val: number) => {
-    const clamped = Math.min(60, Math.max(1.0, val));
+    const clamped = Math.min(80, Math.max(1.0, val));
     if (stamp.lockAspectRatio && stamp.aspectRatio > 0) {
       const newHeight = Math.round((clamped / stamp.aspectRatio) * 10) / 10;
       onUpdate({
         ...stamp,
         widthMm: clamped,
-        heightMm: Math.min(60, Math.max(1.0, newHeight)),
+        heightMm: Math.min(80, Math.max(1.0, newHeight)),
       });
     } else {
       onUpdate({ ...stamp, widthMm: clamped });
@@ -49,13 +49,13 @@ export const StampCard: React.FC<StampCardProps> = ({
   };
 
   const handleHeightChange = (val: number) => {
-    const clamped = Math.min(60, Math.max(1.0, val));
+    const clamped = Math.min(80, Math.max(1.0, val));
     if (stamp.lockAspectRatio && stamp.aspectRatio > 0) {
       const newWidth = Math.round((clamped * stamp.aspectRatio) * 10) / 10;
       onUpdate({
         ...stamp,
         heightMm: clamped,
-        widthMm: Math.min(60, Math.max(1.0, newWidth)),
+        widthMm: Math.min(80, Math.max(1.0, newWidth)),
       });
     } else {
       onUpdate({ ...stamp, heightMm: clamped });
@@ -76,7 +76,7 @@ export const StampCard: React.FC<StampCardProps> = ({
     }
   };
 
-  const isOverLimit = stamp.widthMm > 50 || stamp.heightMm > 50;
+  const isOverLimit = stamp.widthMm > 80 || stamp.heightMm > 80;
   const isUnderLimit = stamp.widthMm < 1.5 || stamp.heightMm < 1.5;
 
   const currentDisplayImg = stamp.processedImageUrl || stamp.imageUrl;
@@ -270,10 +270,10 @@ export const StampCard: React.FC<StampCardProps> = ({
             </button>
           </div>
 
-          {/* Quick Click Sizes including 19mm (User request) */}
+          {/* Quick Click Sizes including 19mm and up to 80mm */}
           <div className="flex items-center flex-wrap gap-1">
             <span className="text-[10px] text-slate-400 font-medium">빠른 규격:</span>
-            {[10, 13, 15, 18, 19, 20, 25, 30].map((size) => (
+            {[10, 13, 15, 18, 19, 20, 25, 30, 50, 60, 80].map((size) => (
               <button
                 key={size}
                 type="button"
@@ -288,11 +288,13 @@ export const StampCard: React.FC<StampCardProps> = ({
                     ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
                     : size === 19
                     ? 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100 ring-1 ring-rose-200'
+                    : size === 80
+                    ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
                 title={`${size}mm 규격으로 변경`}
               >
-                {size}mm{size === 19 ? '★' : ''}
+                {size}mm{size === 19 ? '★' : size === 80 ? ' (최대)' : ''}
               </button>
             ))}
           </div>
@@ -308,12 +310,12 @@ export const StampCard: React.FC<StampCardProps> = ({
                 <input
                   type="number"
                   min="1.5"
-                  max="50"
+                  max="80"
                   step="0.1"
                   value={stamp.widthMm}
                   onChange={(e) => handleWidthChange(parseFloat(e.target.value) || 1.5)}
                   className="w-16 text-center text-sm font-mono font-bold bg-white border border-rose-300 text-rose-700 rounded px-1.5 py-0.5 focus:ring-2 focus:ring-rose-400 outline-hidden shadow-2xs"
-                  title="원하는 mm 수치를 직접 타이핑하세요 (예: 19, 18.5, 20 등)"
+                  title="원하는 mm 수치를 직접 타이핑하세요 (예: 19, 50, 80 등)"
                 />
                 <span className="text-slate-700 text-xs font-mono font-bold">mm</span>
               </div>
@@ -321,7 +323,7 @@ export const StampCard: React.FC<StampCardProps> = ({
             <input
               type="range"
               min="1.5"
-              max="50"
+              max="80"
               step="0.5"
               value={stamp.widthMm}
               onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
@@ -341,12 +343,12 @@ export const StampCard: React.FC<StampCardProps> = ({
                   <input
                     type="number"
                     min="1.5"
-                    max="50"
+                    max="80"
                     step="0.1"
                     value={stamp.heightMm}
                     onChange={(e) => handleHeightChange(parseFloat(e.target.value) || 1.5)}
                     className="w-16 text-center text-sm font-mono font-bold bg-white border border-rose-300 text-rose-700 rounded px-1.5 py-0.5 focus:ring-2 focus:ring-rose-400 outline-hidden shadow-2xs"
-                    title="원하는 mm 수치를 직접 타이핑하세요"
+                    title="원하는 mm 수치를 직접 타이핑하세요 (1.5mm ~ 80mm)"
                   />
                   <span className="text-slate-700 text-xs font-mono font-bold">mm</span>
                 </div>
@@ -354,7 +356,7 @@ export const StampCard: React.FC<StampCardProps> = ({
               <input
                 type="range"
                 min="1.5"
-                max="50"
+                max="80"
                 step="0.5"
                 value={stamp.heightMm}
                 onChange={(e) => handleHeightChange(parseFloat(e.target.value))}
@@ -368,7 +370,7 @@ export const StampCard: React.FC<StampCardProps> = ({
         {isOverLimit && (
           <div className="flex items-center space-x-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
             <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-            <span>최대 규격 50mm를 초과하였습니다. 팝핑 머신 규격에 맞게 조정하세요.</span>
+            <span>최대 규격 80mm를 초과하였습니다. 팝핑 머신 규격에 맞게 조정하세요.</span>
           </div>
         )}
 

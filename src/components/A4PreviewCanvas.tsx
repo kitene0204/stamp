@@ -1,18 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   ZoomIn, 
   ZoomOut, 
   Maximize2, 
   ChevronLeft, 
   ChevronRight, 
-  Eye, 
   Grid, 
-  Ruler, 
-  Layers,
-  Sparkles,
-  Scissors
+  Scissors,
+  Move,
+  RotateCcw,
+  Sparkles
 } from 'lucide-react';
-import { LayoutResult, LayoutSettings, PlacedStamp } from '../types';
+import { LayoutResult, LayoutSettings } from '../types';
 import { A4_HEIGHT_MM, A4_WIDTH_MM } from '../utils/layoutEngine';
 
 interface A4PreviewCanvasProps {
@@ -32,6 +31,11 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number>(0.75); // 75% default for desktop view
   const [autoFit, setAutoFit] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(false);
+  
+  // Drag & Pan state
+  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const totalPages = Math.max(1, layoutResult.totalPages);
@@ -60,6 +64,7 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
           const scaleY = (height - 48) / a4PxHeight;
           const bestScale = Math.min(scaleX, scaleY, 1.0);
           setZoomLevel(Math.max(0.3, Math.round(bestScale * 100) / 100));
+          setPan({ x: 0, y: 0 });
         }
       }
     });
@@ -70,17 +75,90 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
 
   const handleZoomChange = (delta: number) => {
     setAutoFit(false);
-    setZoomLevel((prev) => Math.min(2.0, Math.max(0.3, Math.round((prev + delta) * 10) / 10)));
+    setZoomLevel((prev) => Math.min(2.5, Math.max(0.2, Math.round((prev + delta) * 10) / 10)));
+  };
+
+  const handleSetExactZoom = (scale: number) => {
+    setAutoFit(false);
+    setZoomLevel(scale);
   };
 
   const handleResetFit = () => {
     setAutoFit(true);
+    setPan({ x: 0, y: 0 });
+  };
+
+  // Mouse Drag to Pan
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only start pan if left click
+    if (e.button !== 0) return;
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: e.clientX - pan.x,
+      y: e.clientY - pan.y,
+    };
+  };
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isDragging) return;
+      setAutoFit(false);
+      setPan({
+        x: e.clientX - dragStartRef.current.x,
+        y: e.clientY - dragStartRef.current.y,
+      });
+    },
+    [isDragging]
+  );
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Touch Drag to Pan for mobile/tablets
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.touches[0].clientX - pan.x,
+        y: e.touches[0].clientY - pan.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    setAutoFit(false);
+    setPan({
+      x: e.touches[0].clientX - dragStartRef.current.x,
+      y: e.touches[0].clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Wheel to Pan or Zoom (with Ctrl)
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      handleZoomChange(delta);
+    } else {
+      // Regular wheel pans vertically, Shift+wheel pans horizontally
+      setAutoFit(false);
+      setPan((prev) => ({
+        x: prev.x - (e.shiftKey ? e.deltaY : e.deltaX),
+        y: prev.y - (e.shiftKey ? 0 : e.deltaY),
+      }));
+    }
   };
 
   return (
     <div className="flex flex-col h-full bg-slate-900/5 rounded-2xl border border-slate-200/80 overflow-hidden shadow-inner">
       {/* Top Toolbar */}
-      <div className="bg-white px-4 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 z-10 text-xs">
+      <div className="bg-white px-3 sm:px-4 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 z-10 text-xs select-none">
         {/* Page Switcher */}
         <div className="flex items-center space-x-2 shrink-0">
           <span className="text-xs font-bold text-slate-800 whitespace-nowrap">
@@ -88,7 +166,10 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
           </span>
           <div className="flex items-center space-x-1 bg-slate-100 rounded-lg p-0.5 whitespace-nowrap">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+              onClick={() => {
+                setCurrentPage((p) => Math.max(0, p - 1));
+                setPan({ x: 0, y: 0 });
+              }}
               disabled={currentPage === 0}
               className="p-1 rounded text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
               title="이전 페이지"
@@ -99,7 +180,10 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
               {currentPage + 1} / {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
+              onClick={() => {
+                setCurrentPage((p) => Math.min(totalPages - 1, p + 1));
+                setPan({ x: 0, y: 0 });
+              }}
               disabled={currentPage >= totalPages - 1}
               className="p-1 rounded text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
               title="다음 페이지"
@@ -117,7 +201,7 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
         <div className="flex items-center space-x-1 sm:space-x-2 text-xs shrink-0 ml-auto">
           {/* Spacing Selector (3cm / 2cm / Pad) */}
           <div className="flex items-center space-x-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
-            <span className="text-[10px] text-slate-500 font-semibold px-1 hidden md:inline">도장 간격:</span>
+            <span className="text-[10px] text-slate-500 font-semibold px-1 hidden lg:inline">도장 간격:</span>
             {[
               { label: '3cm (30mm)', val: 30 },
               { label: '2cm (20mm)', val: 20 },
@@ -196,6 +280,20 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
             </button>
           </div>
 
+          {/* 100% Real Size Button */}
+          <button
+            onClick={() => handleSetExactZoom(1.0)}
+            className={`px-2 py-1 rounded-lg border text-xs font-medium whitespace-nowrap shrink-0 ${
+              zoomLevel === 1.0 && !autoFit
+                ? 'bg-rose-50 text-rose-700 border-rose-300 font-bold'
+                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+            }`}
+            title="100% 1:1 실측 크기로 확대"
+          >
+            100%
+          </button>
+
+          {/* Auto Fit Button */}
           <button
             onClick={handleResetFit}
             className={`px-2 py-1 rounded-lg border text-xs font-medium whitespace-nowrap shrink-0 ${
@@ -203,7 +301,7 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
                 ? 'bg-slate-900 text-white border-slate-900'
                 : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
             }`}
-            title="화면에 맞추기"
+            title="화면에 맞추기 (중앙 정렬)"
           >
             <Maximize2 className="w-3 h-3 inline-block mr-1" />
             <span className="hidden sm:inline whitespace-nowrap">화면 맞춤</span>
@@ -211,19 +309,49 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
         </div>
       </div>
 
-      {/* Main Canvas Scroll Area */}
+      {/* Main Canvas Area with Drag & Pan */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto p-4 sm:p-8 flex items-center justify-center bg-slate-200/60 relative"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
+        className={`flex-1 overflow-hidden relative flex items-center justify-center bg-slate-200/70 select-none ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
       >
-        {/* Scaled A4 Container */}
+        {/* Floating Pan/Drag Help Badge */}
+        <div className="absolute top-3 left-3 z-30 pointer-events-none flex items-center space-x-1.5 bg-slate-900/75 text-white text-[10px] font-medium px-2.5 py-1 rounded-full backdrop-blur-xs shadow-md opacity-90 transition-opacity">
+          <Move className="w-3 h-3 text-rose-400 shrink-0 animate-pulse" />
+          <span>마우스로 드래그하여 상하좌우 자유 이동</span>
+          {(pan.x !== 0 || pan.y !== 0) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPan({ x: 0, y: 0 });
+              }}
+              className="pointer-events-auto ml-1.5 px-1.5 py-0.2 bg-white/20 hover:bg-white/30 rounded text-[9px] text-white flex items-center space-x-0.5"
+              title="원래 위치로 중앙 정렬"
+            >
+              <RotateCcw className="w-2.5 h-2.5" />
+              <span>위치 리셋</span>
+            </button>
+          )}
+        </div>
+
+        {/* Scaled & Translated A4 Container */}
         <div
           style={{
-            transform: `scale(${zoomLevel})`,
+            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoomLevel})`,
             transformOrigin: 'center center',
-            transition: autoFit ? 'transform 0.15s ease-out' : 'none',
+            transition: isDragging ? 'none' : autoFit ? 'transform 0.15s ease-out' : 'none',
+            willChange: 'transform',
           }}
-          className="relative shadow-2xl transition-shadow shrink-0"
+          className="relative shadow-2xl transition-shadow shrink-0 pointer-events-auto"
         >
           {/* Exact Physical A4 Dimension Box */}
           <div
@@ -311,7 +439,10 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
               return (
                 <div
                   key={item.instanceId}
-                  onClick={() => onSelectStamp && onSelectStamp(stamp.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSelectStamp) onSelectStamp(stamp.id);
+                  }}
                   style={{
                     left: `${xMm}mm`,
                     top: `${yMm}mm`,
@@ -319,7 +450,7 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
                     height: `${heightMm}mm`,
                   }}
                   className="absolute cursor-pointer hover:ring-2 hover:ring-rose-500 hover:ring-offset-1 transition-all group z-10"
-                  title={`${stamp.name} (${widthMm}x${heightMm}mm)`}
+                  title={`${stamp.name} (${widthMm}x${heightMm}mm) - 클릭 시 편집창 이동`}
                 >
                   {/* Cut Guide Line (if enabled) */}
                   {stamp.showCutGuide && settings.showCutLines && (
@@ -357,7 +488,7 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
                       src={displayImg}
                       alt={stamp.name}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain pointer-events-none"
                     />
                   </div>
 
@@ -371,7 +502,7 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
 
             {/* Empty page state notice */}
             {activePageData.stamps.length === 0 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-8 text-center pointer-events-none">
                 <Sparkles className="w-10 h-10 text-slate-300 mb-2" />
                 <p className="text-sm font-semibold text-slate-600">배치된 도장이 없습니다</p>
                 <p className="text-xs text-slate-400 mt-1 max-w-xs">
@@ -384,7 +515,7 @@ export const A4PreviewCanvas: React.FC<A4PreviewCanvasProps> = ({
       </div>
 
       {/* Bottom Footer Info bar */}
-      <div className="bg-white border-t border-slate-200 px-4 py-2 flex items-center justify-between text-xs text-slate-500">
+      <div className="bg-white border-t border-slate-200 px-4 py-2 flex items-center justify-between text-xs text-slate-500 select-none">
         <div className="flex items-center space-x-3">
           <span>
             규격: <strong className="text-slate-700">A4 ({paperWidthMm} x {paperHeightMm} mm)</strong>
