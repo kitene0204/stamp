@@ -94,13 +94,22 @@ export const StampCard: React.FC<StampCardProps> = ({
           <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center shrink-0">
             {index + 1}
           </span>
-          <input
-            type="text"
-            value={stamp.name}
-            onChange={(e) => onUpdate({ ...stamp, name: e.target.value })}
-            className="text-xs font-semibold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-rose-500 focus:bg-white px-1 py-0.5 rounded outline-hidden truncate max-w-[140px] sm:max-w-[200px]"
-            title="도장 이름 편집"
-          />
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center space-x-1.5">
+              <input
+                type="text"
+                value={stamp.name}
+                onChange={(e) => onUpdate({ ...stamp, name: e.target.value })}
+                className="text-xs font-semibold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-rose-500 focus:bg-white px-1 py-0.5 rounded outline-hidden truncate max-w-[130px] sm:max-w-[180px]"
+                title="도장 이름 편집"
+              />
+              {stamp.authorName && (
+                <span className="text-[10px] font-bold bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded-full border border-rose-200 truncate shrink-0">
+                  {stamp.authorName}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Top actions */}

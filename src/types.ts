@@ -36,8 +36,44 @@ export interface StampItem {
   filters: ImageFilterSettings;
   
   sourceType: 'upload' | 'preset' | 'text-generator';
+  authorName?: string; // e.g. "김철수 선생님"
+  authorSchool?: string; // e.g. "한국초등학교"
   createdAt: number;
 }
+
+export interface TeacherParticipant {
+  id: string;
+  name: string;
+  school?: string;
+  role: 'host' | 'teacher';
+  joinedAt: number;
+  submittedCount: number;
+  color: string;
+}
+
+export interface WorkshopRoom {
+  roomId: string;
+  roomName: string;
+  hostId: string;
+  hostName: string;
+  createdAt: number;
+  stamps: StampItem[];
+  participants: TeacherParticipant[];
+  settings: LayoutSettings;
+  allowTeacherDelete: boolean;
+}
+
+export type RealtimeAction =
+  | { type: 'join'; roomId: string; user: TeacherParticipant }
+  | { type: 'sync_state'; room: WorkshopRoom }
+  | { type: 'stamp_added'; stamp: StampItem; userName: string }
+  | { type: 'stamp_updated'; stamp: StampItem }
+  | { type: 'stamp_deleted'; stampId: string; userName: string }
+  | { type: 'stamps_cleared' }
+  | { type: 'settings_updated'; settings: LayoutSettings }
+  | { type: 'user_joined'; user: TeacherParticipant }
+  | { type: 'user_left'; userId: string; userName: string }
+  | { type: 'reaction'; from: string; emoji: string };
 
 export interface PageMargin {
   top: number;

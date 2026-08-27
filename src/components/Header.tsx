@@ -7,7 +7,8 @@ import {
   HelpCircle, 
   Layers, 
   RotateCcw,
-  Stamp
+  Stamp,
+  Radio
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -18,6 +19,8 @@ interface HeaderProps {
   onOpenPresetModal: () => void;
   onOpenSettingsModal: () => void;
   onOpenPrintGuide: () => void;
+  onOpenRoomModal?: () => void;
+  isRoomActive?: boolean;
   onPrint: () => void;
   onExportPdf: () => void;
   onReset: () => void;
@@ -32,6 +35,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPresetModal,
   onOpenSettingsModal,
   onOpenPrintGuide,
+  onOpenRoomModal,
+  isRoomActive = false,
   onPrint,
   onExportPdf,
   onReset,
@@ -78,6 +83,23 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 ml-auto">
+            {/* Workshop Room Button */}
+            {onOpenRoomModal && (
+              <button
+                onClick={onOpenRoomModal}
+                id="btn-open-workshop-room"
+                className={`inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap shrink-0 shadow-2xs ${
+                  isRoomActive
+                    ? 'bg-rose-600 text-white hover:bg-rose-700 animate-pulse'
+                    : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                }`}
+                title="교원 연수 실시간 도안 수합방"
+              >
+                <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 shrink-0" />
+                <span className="whitespace-nowrap">연수 수합방</span>
+              </button>
+            )}
+
             {/* Text Stamp Maker */}
             <button
               onClick={onOpenTextStampModal}
