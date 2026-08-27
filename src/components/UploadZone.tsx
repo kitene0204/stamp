@@ -85,7 +85,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddStamps, compact = f
             lockAspectRatio: true,
             shape: shape,
             copies: 1,
-            showCutGuide: true,
+            showCutGuide: false, // 테두리선(재단선) 없이 깨끗하게 출력
             cutGuideColor: '#94a3b8',
             cutGuideStyle: 'solid',
             cutGuideMarginMm: 1.0,

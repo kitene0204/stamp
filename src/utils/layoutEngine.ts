@@ -19,7 +19,7 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
   alignment: 'pack',
   showRuler: true,
   showCalibrationCheckBar: true,
-  showCutLines: true,
+  showCutLines: false, // 기본값: 테두리선(재단선) 미표시
   showPageInfo: true,
   paperOrientation: 'portrait',
 };

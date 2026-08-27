@@ -243,7 +243,7 @@ export const TextStampModal: React.FC<TextStampModalProps> = ({
       lockAspectRatio: true,
       shape: shape,
       copies: copies,
-      showCutGuide: true,
+      showCutGuide: false,
       cutGuideColor: '#94a3b8',
       cutGuideStyle: 'solid',
       cutGuideMarginMm: 1.0,
